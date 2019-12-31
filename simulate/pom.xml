@@ -1,0 +1,46 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>disk.failure.prediction</groupId>
+    <artifactId>StreamDFP</artifactId>
+    <version>2019.01.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>simulate</artifactId>
+  <packaging>jar</packaging>
+
+  <name>Simulate</name>
+  <description>
+    Simulate disk failure prediction with stream mining
+  </description>
+  <url>http://github.com/shujiehan/StreamDFP</url>
+  <organization>
+    <name>The Chinese University of Hong Kong</name>
+    <url>http://www.cuhk.edu.hk/</url>
+  </organization>
+  <licenses>
+    <license>
+      <name>GNU General Public License 3.0</name>
+      <url>http://www.gnu.org/licenses/gpl-3.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <id>sjhan</id>
+      <name>Shujie Han</name>
+      <email>sjhan@cse.cuhk.edu.hk</email>
+    </developer>
+  </developers>
+
+  <dependencies>
+    <dependency>
+        <groupId>disk.failure.prediction</groupId>
+        <artifactId>moa</artifactId>
+        <version>2019.01.0-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
+
+</project>

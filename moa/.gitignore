@@ -1,0 +1,8 @@
+/target/
+/dumpClustering.csv
+/SeaAnomaliesUnsupervised.txt
+.idea
+*.iml
+*~
+*.bak
+
