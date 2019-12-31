@@ -62,7 +62,7 @@ For more details, please refer to an example script `run_hi7.sh`.
 
 Using *Hitachi HDS722020ALA330* as an example:
 
-Assume the dataset storing `~/trace/smart/all/`
+Assume the dataset storing under `~/trace/smart/all/`
 
 #### Classification:
 
@@ -90,9 +90,9 @@ Assume the dataset storing `~/trace/smart/all/`
 
 3. go back to `StreamDFP/`;
 
-4. run the script `run_hi7_reg.sh` to training prediction model of ARF and predict disk failures;
+4. run the script `run_hi7_reg.sh` to training prediction model of FIMT-DD and predict disk failures;
 
-5. parse the results by running `python parse_reg.py hi7_example/example.txt`
+5. parse the results by running `python parse_reg.py hi7_example_reg/example.txt`
 
 6. output the following results:
 
