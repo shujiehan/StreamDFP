@@ -1,6 +1,4 @@
 #!bin/bash
-# run and dump pickle
-# 5: load, 6: save
 START_DATE="2014-09-30"
 TRAIN_PATH="./pyloader/hi7_train_p30n7v30_fix_20_reg/"
 TEST_PATH="./pyloader/hi7_test_p30n7v30_fix_20_reg/"
