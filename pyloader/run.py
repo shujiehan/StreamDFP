@@ -100,11 +100,9 @@ def run_simulating(start_date, path, path_load, path_save, train_path,
                         0: 'c0',
                         1: 'c1'
                     })
-                arff.dump(fname, sim.data[0:sim.memory.new_inst_start_index],
-                          train_path + fname + ".arff")
+                arff.dump(fname, sim.data, train_path + fname + ".arff")
             elif file_format == "csv":
-                sim.data[0:sim.memory.new_inst_start_index].to_csv(
-                    train_path + fname + ".csv", index=False)
+                sim.data.to_csv(train_path + fname + ".csv", index=False)
             if test_path is not None and sim.memory.new_inst_start_index > 0:
                 if file_format == "arff":
                     arff.dump(fname,
@@ -130,11 +128,9 @@ def run_simulating(start_date, path, path_load, path_save, train_path,
                         0: 'c0',
                         1: 'c1'
                     })
-                arff.dump(fname, sim.data[0:sim.memory.new_inst_start_index],
-                          train_path + fname + ".arff")
+                arff.dump(fname, sim.data, train_path + fname + ".arff")
             elif file_format == "csv":
-                sim.data[0:sim.memory.new_inst_start_index].to_csv(
-                    train_path + fname + ".csv", index=False)
+                sim.data.to_csv(train_path + fname + ".csv", index=False)
             if test_path is not None and sim.memory.new_inst_start_index > 0:
                 if file_format == "arff":
                     arff.dump(fname,
@@ -155,11 +151,9 @@ def run_simulating(start_date, path, path_load, path_save, train_path,
                         0: 'c0',
                         1: 'c1'
                     })
-                arff.dump(fname, sim.data[0:sim.memory.new_inst_start_index],
-                          train_path + fname + ".arff")
+                arff.dump(fname, sim.data, train_path + fname + ".arff")
             elif file_format == "csv":
-                sim.data[0:sim.memory.new_inst_start_index].to_csv(
-                    train_path + fname + ".csv", index=False)
+                sim.data.to_csv(train_path + fname + ".csv", index=False)
             if test_path is not None and sim.memory.new_inst_start_index > 0:
                 if file_format == "arff":
                     arff.dump(fname,

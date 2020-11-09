@@ -80,7 +80,7 @@ Assume the dataset storing under `~/trace/smart/all/`
 
 |   days    |    FP     |   FPR    | F1-score  | Precision |  Recall   |
 | :-------: | :-------: | :------: | :-------: | :-------: | :-------: |
-| 10.590000 | 24.799999 | 0.528515 | 24.280455 | 14.774220 | 68.095238 |
+| 11.710000 | 22.200001 | 0.473107 | 26.220090 | 16.235855 | 68.095238 |
 
 #### Regression
 
@@ -98,7 +98,7 @@ Assume the dataset storing under `~/trace/smart/all/`
 
 | days_mean | days_std | days_max | days_min  |
 | :-------: | :------: | :------: | :-------: |
-| -1.121766 | 5.532503 | 7.808490 | -9.630521 |
+| 0.302072  | 5.017107 | 9.206787 | -7.110260 |
 
 ## Contact
 
