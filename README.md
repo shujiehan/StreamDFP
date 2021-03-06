@@ -6,6 +6,8 @@ StreamDFP is designed to support a variety of learning algorithms, based on thre
 
 We implement the prototype of StreamDFP in two parts. The first part is implemented in Python for preprocessing. We realize feature extraction, buffering, labeling, and first-phase downsampling. The second part is written in Java. We read the processed data from local file system for second-phase downsampling and training. We realize incremental algorithms and change detectors based on [Massive Online Analysis (MOA)](https://moa.cms.waikato.ac.nz/).
 
+In StreamDFP-2.0.0, we incorporate online transfer learning into StreamDFP for the prediction of minority disk models.
+
 ## Prerequisite
 
 - Python3: Please install [numpy](https://numpy.org/) and [pandas](https://pandas.pydata.org/).
@@ -19,6 +21,9 @@ We use the following four disk models in public dataset [Backblaze](https://www.
 - Seagate ST4000DM000
 - Seagate ST12000NM0007
 - Hitachi HDS722020ALA330
+- Seagate ST8000DM002
+- Seagate ST8000NM0055
+- HGST HMS5C4040BLE640
 
 You can also use other disk models for testing.
 
@@ -99,6 +104,44 @@ Assume the dataset storing under `~/trace/smart/all/`
 | days_mean | days_std | days_max | days_min  |
 | :-------: | :------: | :------: | :-------: |
 | 0.302072  | 5.017107 | 9.206787 | -7.110260 |
+
+##  Usage of Online Transfer Learning
+
+We apply transfer learning into disk failure prediction. Specifically, we first
+a prediction model (denoted by M_S) on the samples from the source disk model.
+When the samples of target disk model arrive, we start to another prediction
+model (denoted by M_T) and also update M_S. In the prediction phase, we combine
+the prediction results of both M_S and M_T.
+
+### Datasets
+| Source disk models | Target disk models |
+| :----------------: | :----------------: |
+| Seagate ST4000DM000 | Seagate ST31500541AS |
+| Seagate ST4000DM000 | Seagate ST4000DX000  |
+| Hitachi HDS722020ALA330 | Hitachi HDS5C3030ALA630 |
+| Hitachi HDS722020ALA330 | Hitachi HDS723030ALA640 |
+
+### Example
+
+Take Hitachi HDS722020ALA330 (hi7) as the source disk model and Hitachi HDS723030ALA640 (hi640) as the target disk model.
+
+1. open `pyloader/`;
+
+2. run the script `run_hi7_loader_pre.sh` to process 400-day data for the source disk model (hi7).
+
+2. run the script `run_hi640_transfer_loader.sh` to process 400-day data for the target disk model (hi640);
+
+3. go back to `StreamDFP/`;
+
+4. run the script `run_hi640_transfer.sh` to training prediction model of ARF and predict disk failures for the target disk model;
+
+5. parse the results by running `python parse.py hi640_transfer/example.txt`
+
+6. output the following results:
+
+|   days    |    FP     |   FPR    | F1-score  | Precision |  Recall   |
+| :-------: | :-------: | :------: | :-------: | :-------: | :-------: |
+| 10.487608 | 6.658536  | 0.678112 | 39.982908 | 30.785494 | 57.017281 |
 
 ## Contact
 

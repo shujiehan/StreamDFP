@@ -125,18 +125,23 @@ public abstract class AbstractPredict extends AbstractOptionHandler {
     protected static final int ENSEMBLE = 0;
     protected static final int SINGLE_TREE = 1;
     protected static final int SINGLE_TREE_DOWN_SAMPLING = 2;
+    // For transfer learning
+    protected static final String SOURCE_DOMAIN = "source";
+    protected static final String TARGET_DOMAIN = "target";
+    protected static final String TEST = "test";
+    protected static final String TRAIN = "train";
+    protected static final String TEST_TRAIN = "test and train";
 
     // key: serial number; values: instances of the disk
     protected HashMap<String, List<Instance>> keepDelayInstances;
-    public double downSampleRatio;
     public int cindex;
     protected Random samplingRandom;
     protected int randomSeed = 1;
     public boolean blRegression;
+    public boolean blTransfer;
+
     public int validationWindow;
-    public int labelingMethod;
     public int labelWindow;
-    public HashMap<String, Integer> labelDaysMap;
 
     public MultiChoiceOption learnerOption = new MultiChoiceOption("learner", 'l',
             "Ensembles or single tree?", new String[]{"ensemble", "single tree", "single tree with downsampling"},
@@ -144,6 +149,10 @@ public abstract class AbstractPredict extends AbstractOptionHandler {
 
     public FloatOption lambdaOption = new FloatOption("lambda", 'b', "lambda for oversampling positive class in single tree",
             6);
+
+    public void cleanKeepDelayInstances() {
+        keepDelayInstances.clear();
+    }
 
     protected void keep(Instance inst, int queueSize) {
         String sn = inst.getSerialNumber();
@@ -156,14 +165,8 @@ public abstract class AbstractPredict extends AbstractOptionHandler {
 
     protected Instances load(String filename, int classIndex) {
         Instances	result = null;
-        //ArffLoader 	loader;
-
-        //result = null;
 
         try {
-			/*loader = new ArffLoader();
-      loader.setFile(new TmpFile(filename));
-      result = loader.getDataSet();*/ // JD: weka's ARffLoader
             File tmp=new File(filename);
             FileInputStream fileStream = new FileInputStream(tmp.getAbsolutePath());
             Reader reader=new BufferedReader(new InputStreamReader(fileStream));
@@ -226,7 +229,7 @@ public abstract class AbstractPredict extends AbstractOptionHandler {
         }
     }
 
-    public InspectionData inspect(Instances trainingData, Instances testData,
+    public InspectionData inspect(Instances testData,
                                   LearningPerformanceEvaluator globalEvaluator,
                                   LearningPerformanceEvaluator localEvaluator, AbstractClassifier scheme,
                                   Boolean blDelay, int validationWindow) {
@@ -261,7 +264,6 @@ public abstract class AbstractPredict extends AbstractOptionHandler {
         for (int i = 0; i < testData.numInstances(); i++) {
             inst = testData.instance(i);
             inst.setSerialNumber(recordSN.get(i));
-            long start_time = System.currentTimeMillis();
             votes = scheme.getVotesForInstance(inst);
             assert(inst.classValue() >= 0 && inst.classValue() <= 1);
             if (blDelay) {
@@ -271,22 +273,21 @@ public abstract class AbstractPredict extends AbstractOptionHandler {
                 globalEvaluator.addResult((Example<Instance>) new InstanceExample(inst), votes);
                 localEvaluator.addResult((Example<Instance>) new InstanceExample(inst), votes);
             }
-            //if (i == testData.numInstances() - 1) {
-            //    result = new InspectionData();
-            //    result.index = i;
-            //    result.votes = votes;
-            //    result.globalMeasurements = globalEvaluator.getPerformanceMeasurements();
-            //    result.localMeasurements = localEvaluator.getPerformanceMeasurements();
-            //    result.modelMeasurements = scheme.getModelMeasurements();
-            //}
         }
+        return result;
+    }
+
+    public void updateModel(Instances trainingData, AbstractClassifier scheme, double downSampleRatio) {
         // train
         // compute imbalance ratio
+        Instance inst;
         int cntNegatives = 0;
         int cntPositives = 0;
-        serialNumber = trainingData.attribute("serial_number");
-        attrSN = serialNumber.getAttributeValues();
-        recordSN.clear();
+        Attribute serialNumber = trainingData.attribute("serial_number");
+        List<String> attrSN = serialNumber.getAttributeValues();
+        int idxSerialNumber = trainingData.indexOf(serialNumber);
+        // record serializable serial numbers
+        List<String> recordSN = new ArrayList<>();
         for (int i = 0; i < trainingData.numInstances(); i++) {
             inst = trainingData.instance(i);
             assert(inst.classValue() >= 0 && inst.classValue() <= 1);
@@ -307,8 +308,7 @@ public abstract class AbstractPredict extends AbstractOptionHandler {
         if (cntPositives == 0) imbalanceRatio = 1000.0;
         else imbalanceRatio = cntNegatives * 1.0 / cntPositives;
 
-        scheme.updateDownSampleRatio(this.downSampleRatio * imbalanceRatio);
-        //System.out.println(cntNegatives + " " + cntPositives +" " + this.downSampleRatio * imbalanceRatio);
+        scheme.updateDownSampleRatio(downSampleRatio * imbalanceRatio);
         for (int i = 0; i < trainingData.numInstances(); i++) {
             inst = trainingData.instance(i);
             inst.setSerialNumber(recordSN.get(i));
@@ -333,11 +333,10 @@ public abstract class AbstractPredict extends AbstractOptionHandler {
                     if (k > 0) {
                         Instance weightedInst = (Instance) inst.copy();
                         weightedInst.setWeight(inst.weight() * k);
-                        scheme.trainOnInstance(inst);
+                        scheme.trainOnInstance(weightedInst);
                     }
                     break;
             }
         }
-        return result;
     }
 }

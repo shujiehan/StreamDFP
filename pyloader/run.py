@@ -12,12 +12,16 @@ class Simulate(AbstractPredict):
     def __init__(self, path, start_date, positive_window_size, #manufacturer, \
             disk_model, columns, features, label, forget_type, bl_delay=False, \
             dropna=False, negative_window_size=6, validation_window=6, \
-            bl_regression=False, label_days=None):
+            bl_regression=False, label_days=None, bl_transfer=False):
         super().__init__()
         self.memory = Memory(path, start_date, positive_window_size,  #manufacturer,\
             disk_model, columns, features, label, forget_type, dropna, bl_delay, \
-            negative_window_size, bl_regression, label_days)
-        self.data = self.memory.ret_df.drop(['model', 'date'], axis=1)
+            negative_window_size, bl_regression, label_days, bl_transfer)
+        if not bl_transfer:
+            self.memory.buffering()
+            self.data = self.memory.ret_df.drop(['model', 'date'], axis=1)
+        else:
+            self.data = self.memory.ret_df.drop(['model', 'date'], axis=1)
         self.data = self.data.reset_index(drop=True)
         self.class_name = label[0]
         self.num_classes = 2
@@ -51,7 +55,7 @@ def run_simulating(start_date, path, path_load, path_save, train_path,
                    test_path, file_format, iter_days, model, features, label,
                    columns, forget_type, positive_window_size, bl_delay,
                    bl_load, bl_save, negative_window_size, validation_window,
-                   bl_regression, label_days):
+                   bl_regression, label_days, bl_transfer):
     if file_format == "arff":
         arff = Arff(bl_regression=bl_regression)
     if bl_load:
@@ -65,27 +69,71 @@ def run_simulating(start_date, path, path_load, path_save, train_path,
         sim = Simulate(path, start_date, positive_window_size, model, columns,
                        features, label, forget_type, bl_delay, True,
                        negative_window_size, validation_window, bl_regression,
-                       label_days)
-        fname = (
-            sim.memory.cur_date - datetime.timedelta(days=1)).isoformat()[0:10]
+                       label_days, bl_transfer)
+        if not bl_transfer:
+            fname = (sim.memory.cur_date -
+                     datetime.timedelta(days=1)).isoformat()[0:10]
 
-        if file_format == "arff":
-            if not bl_regression:
-                sim.data['failure'] = sim.data['failure'].map({
-                    0: 'c0',
-                    1: 'c1'
-                })
-            arff.dump(fname, sim.data, train_path + fname + ".arff")
-        elif file_format == "csv":
-            sim.data.to_csv(train_path + fname + ".csv", index=False)
-        if test_path is not None and sim.memory.new_inst_start_index > 0:
             if file_format == "arff":
-                arff.dump(fname, sim.data[sim.memory.new_inst_start_index:],
-                          test_path + fname + ".arff")
+                if not bl_regression:
+                    sim.data['failure'] = sim.data['failure'].map({
+                        0: 'c0',
+                        1: 'c1'
+                    })
+                arff.dump(fname, sim.data, train_path + fname + ".arff")
             elif file_format == "csv":
-                sim.data[sim.memory.new_inst_start_index:].to_csv(
-                    test_path + fname + ".csv", index=False)
-        sim.run()
+                sim.data.to_csv(train_path + fname + ".csv", index=False)
+            if test_path is not None and sim.memory.new_inst_start_index > 0:
+                if file_format == "arff":
+                    arff.dump(fname,
+                              sim.data[sim.memory.new_inst_start_index:],
+                              test_path + fname + ".arff")
+                elif file_format == "csv":
+                    sim.data[sim.memory.new_inst_start_index:].to_csv(
+                        test_path + fname + ".csv", index=False)
+            sim.run()
+        else:
+            print(sim.memory.cur_date)
+            fname = (sim.memory.cur_date -
+                     datetime.timedelta(days=1)).isoformat()[0:10]
+            if test_path is not None:
+                if file_format == "arff":
+                    if not bl_regression:
+                        sim.data['failure'] = sim.data['failure'].map({
+                            0: 'c0',
+                            1: 'c1'
+                        })
+                    arff.dump(fname,
+                              sim.data[sim.memory.new_inst_start_index:],
+                              test_path + fname + ".arff")
+                elif file_format == "csv":
+                    sim.data[sim.memory.new_inst_start_index:].to_csv(
+                        test_path + fname + ".csv", index=False)
+            for i in range(1, positive_window_size):
+                sim.load()
+                print(sim.memory.cur_date)
+                fname = (sim.memory.cur_date -
+                         datetime.timedelta(days=1)).isoformat()[0:10]
+                if test_path is not None:
+                    if file_format == "arff":
+                        if not bl_regression:
+                            sim.data['failure'] = sim.data['failure'].map({
+                                0:
+                                'c0',
+                                1:
+                                'c1'
+                            })
+                        arff.dump(fname,
+                                  sim.data[sim.memory.new_inst_start_index:],
+                                  test_path + fname + ".arff")
+                    elif file_format == "csv":
+                        sim.data[sim.memory.new_inst_start_index:].to_csv(
+                            test_path + fname + ".csv", index=False)
+            if file_format == "arff":
+                arff.dump(fname, sim.data, train_path + fname + ".arff")
+            elif file_format == "csv":
+                sim.data.to_csv(train_path + fname + ".csv", index=False)
+            sim.run()
 
     if bl_load is False and bl_delay:
         for i in range(validation_window):
@@ -200,7 +248,7 @@ def usage(arg):
         "file_format = file format of saving the processed data, arff by default"
     )
     print(
-        "option = 1: enable regression (classification by default); 2: enable loading the Simulate class; 3: enable saving the Simulate class; 4: enable labeling"
+        "option = 1: enable regression (classification by default); 2: enable loading the Simulate class; 3: enable saving the Simulate class; 4: enable labeling; 5: enable transfer learning"
     )
     print(
         "forget_type = \"no\" (keep all historical data) or \"sliding\" (sliding window), \"sliding\" by default"
@@ -228,11 +276,13 @@ def get_parms():
     bl_load = False
     bl_save = False
     bl_regression = False
+    bl_transfer = False
     option = {
         1: "bl_regression",
         2: "bl_load",
         3: "bl_save",
         4: "bl_delay",
+        5: "bl_transfer"
     }
 
     file_format = "arff"
@@ -266,10 +316,6 @@ def get_parms():
         usage(sys.argv[0])
         print("getopts exception")
         sys.exit(1)
-    #if len(opts) == 0:
-    #    print("Please specify at least one parameter!")
-    #    usage(sys.argv[0])
-    #    sys.exit(2)
 
     for o, a in opt:
         if o in ("-h", "--help"):
@@ -302,6 +348,8 @@ def get_parms():
                     bl_save = True
                 elif int(op) == 4:
                     bl_delay = True
+                elif int(op) == 5:
+                    bl_transfer = True
         elif o in ("-i", "--iter_days"):
             iter_days = int(a)
         elif o in ("-d", "--disk_model"):
@@ -329,17 +377,18 @@ def get_parms():
     return (start_date, path, path_load, path_save, train_path, test_path,
             file_format, bl_delay, bl_load, bl_save, iter_days, model,
             features, label, columns, forget_type, positive_window_size,
-            negative_window_size, validation_window, bl_regression, label_days)
+            negative_window_size, validation_window, bl_regression, label_days,
+            bl_transfer)
 
 
 if __name__ == "__main__":
     (start_date, path, path_load, path_save, train_path, test_path,
      file_format, bl_delay, bl_load, bl_save, iter_days, disk_model, features,
      label, columns, forget_type, positive_window_size, negative_window_size,
-     validation_window, bl_regression, label_days) = get_parms()
+     validation_window, bl_regression, label_days, bl_transfer) = get_parms()
 
     run_simulating(start_date, path, path_load, path_save, train_path,
                    test_path, file_format, iter_days, disk_model, features,
                    label, columns, forget_type, positive_window_size, bl_delay,
                    bl_load, bl_save, negative_window_size, validation_window,
-                   bl_regression, label_days)
+                   bl_regression, label_days, bl_transfer)
