@@ -13,7 +13,7 @@ class Memory:
 
     def __init__(self, path, cur_date, positive_window_size, model, columns, features, \
                  label, forget_type, dropna, delay, negative_window_size, \
-                 bl_regression, label_days, bl_transfer):
+                 bl_regression, label_days, bl_transfer, date_format, bl_ssd):
         self.start_date = cur_date - datetime.timedelta(
             days=(positive_window_size))
         self.positive_window = datetime.timedelta(days=positive_window_size)
@@ -23,14 +23,15 @@ class Memory:
         self.dropna_option = dropna
         self.negative_window = datetime.timedelta(days=negative_window_size)
         self.positive_window_size = positive_window_size
-        self.basic_oper = BasicOperation(path, cur_date, model, columns)
+        self.basic_oper = BasicOperation(path, cur_date, model, columns, bl_ssd)
+        self.date_format = date_format
 
         self.bl_regression = bl_regression
         self.bl_transfer = bl_transfer
         self.label_days = datetime.timedelta(days=label_days)
         self.new_inst_start_index = 0
         (self.df, self.cur_date) = self.basic_oper.read_data(
-            1, self.features, self.dropna_option)
+            1, self.features, self.dropna_option, self.date_format)
         self.ret_df = self.df
         self.start_date = self.cur_date - \
                 datetime.timedelta(days=(self.positive_window_size))
@@ -38,7 +39,7 @@ class Memory:
     def buffering(self):
         for i in range(1, self.positive_window_size):
             (df_delta, cur_date) = self.basic_oper.read_data(
-                1, self.features, self.dropna_option)
+                1, self.features, self.dropna_option, self.date_format)
             df_failed = df_delta[df_delta['failure'] == 1]
             if len(df_failed.index) > 0:
                 self.df = self.labeling(df_failed['serial_number'].values,
@@ -85,7 +86,7 @@ class Memory:
 
     def data_management(self, keep_delay=None, delay=False):
         (df_delta, cur_date) = self.basic_oper.read_data(
-            1, self.features, self.dropna_option)
+            1, self.features, self.dropna_option, self.date_format)
         if delay:
             df_failed = df_delta[df_delta['failure'] == 1]
             if len(df_failed.index) > 0:

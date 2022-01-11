@@ -1086,6 +1086,17 @@ public final class Utils {
     return maxIndex;
   }
 
+  public static int maxIndex(double[] doubles, double threshold) {
+    // only for binary classification
+    int maxIndex = 0;
+    for (int i = 0; i < doubles.length; i++) {
+      if (doubles[i] >= threshold) {
+        maxIndex = i;
+      }
+    }
+    return maxIndex;
+  }
+
   /**
    * Returns index of maximum element in a given
    * array of integers. First maximum is returned.

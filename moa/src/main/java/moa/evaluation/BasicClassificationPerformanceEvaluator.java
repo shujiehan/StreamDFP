@@ -94,6 +94,8 @@ public class BasicClassificationPerformanceEvaluator extends AbstractOptionHandl
 
     public double totalNumDaysBeforeFailure = 0;
 
+    public double threshold = 0.5;
+
     @Override
     public void reset() {
         reset(this.numClasses);
@@ -119,13 +121,22 @@ public class BasicClassificationPerformanceEvaluator extends AbstractOptionHandl
         this.totalNumDaysBeforeFailure = 0;
     }
 
+    public void setThreshold(double inputThreshold) {
+        this.threshold = inputThreshold;
+    }
+
     @Override
     public void addResult(Example<Instance> example, double[] classVotes) {
         Instance inst = example.getData();
         double weight = inst.weight();
         if (inst.classIsMissing() == false) {
             int trueClass = (int) inst.classValue();
-            int predictedClass = Utils.maxIndex(classVotes);
+            int predictedClass;
+            if (threshold == 0.5) {
+                predictedClass = Utils.maxIndex(classVotes);
+            } else {
+                predictedClass = Utils.maxIndex(classVotes, threshold);
+            }
             if (weight > 0.0) {
                 if (this.totalWeightObserved == 0) {
                     if (inst.dataset().numClasses() == 1) {
@@ -176,7 +187,13 @@ public class BasicClassificationPerformanceEvaluator extends AbstractOptionHandl
                 addResult((Example<Instance>) new InstanceExample(lastFailedInst), lastFailedVotes);
                 return;
             }
-            if (Utils.maxIndex(votes) == (int)trueClass) {
+            int predictedClass;
+            if (threshold == 0.5) {
+                predictedClass = Utils.maxIndex(votes);
+            } else {
+                predictedClass = Utils.maxIndex(votes, threshold);
+            }
+            if (predictedClass == (int)trueClass) {
                 if ((int)trueClass == 1) {
                     this.totalNumDaysBeforeFailure += (listSize - i);
                 }

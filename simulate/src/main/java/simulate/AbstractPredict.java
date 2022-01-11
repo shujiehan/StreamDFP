@@ -317,8 +317,6 @@ public abstract class AbstractPredict extends AbstractOptionHandler {
             }
             switch (learnerOption.getChosenIndex()) {
                 case AbstractPredict.ENSEMBLE:
-                    scheme.trainOnInstance(inst);
-                    break;
                 case AbstractPredict.SINGLE_TREE:
                     scheme.trainOnInstance(inst);
                     break;

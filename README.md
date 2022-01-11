@@ -4,9 +4,11 @@ StreamDFP is a general stream mining framework for disk failure prediction with 
 
 StreamDFP is designed to support a variety of learning algorithms, based on three key techniques: online labeling, concept-drift-aware training, and general prediction.
 
-We implement the prototype of StreamDFP in two parts. The first part is implemented in Python for preprocessing. We realize feature extraction, buffering, labeling, and first-phase downsampling. The second part is written in Java. We read the processed data from local file system for second-phase downsampling and training. We realize incremental algorithms and change detectors based on [Massive Online Analysis (MOA)](https://moa.cms.waikato.ac.nz/).
+We implement the prototype of StreamDFP in two parts. The first part is implemented in Python for preprocessing. We realize feature extraction, buffering, labeling, and first-phase downsampling. The second part is written in Java. We read the processed data from local file system for second-phase downsampling and training. We realize decision-tree-based algorithms and change detectors based on [Massive Online Analysis (MOA)](https://moa.cms.waikato.ac.nz/).
 
 In StreamDFP-2.0.0, we incorporate online transfer learning into StreamDFP for the prediction of minority disk models.
+
+In StreamDFP-2.1.0, we integrate the Multilayer Perceptron (MLP) with the backpropagation into StreamDFP and make StreamDFP to support the evaluation on public SSD datasets at Alibaba.
 
 ## Prerequisite
 
@@ -15,7 +17,7 @@ In StreamDFP-2.0.0, we incorporate online transfer learning into StreamDFP for t
 
 ## Dataset
 
-We use the following four disk models in public dataset [Backblaze](https://www.backblaze.com/b2/hard-drive-test-data.html):
+We use the following 11 disk models in public dataset [Backblaze](https://www.backblaze.com/b2/hard-drive-test-data.html):
 
 - Seagate ST3000DM001
 - Seagate ST4000DM000
@@ -24,6 +26,15 @@ We use the following four disk models in public dataset [Backblaze](https://www.
 - Seagate ST8000DM002
 - Seagate ST8000NM0055
 - HGST HMS5C4040BLE640
+- Seagate ST31500541AS
+- Seagate ST4000DX000
+- Hitachi HDS5C3030ALA630
+- Hitachi HDS723030ALA640
+
+In addition, We use the following 3 SSD models in [public datasets at Alibaba](https://github.com/alibaba-edu/dcbrain/tree/master/ssd_smart_logs):
+- MA1
+- MB1
+- MC1
 
 You can also use other disk models for testing.
 
@@ -123,7 +134,7 @@ the prediction results of both M_S and M_T.
 
 ### Example
 
-Take Hitachi HDS722020ALA330 (hi7) as the source disk model and Hitachi HDS723030ALA640 (hi640) as the target disk model.
+Take *Hitachi HDS722020ALA330* (hi7) as the source disk model and *Hitachi HDS723030ALA640* (hi640) as the target disk model.
 
 1. open `pyloader/`;
 
@@ -143,7 +154,30 @@ Take Hitachi HDS722020ALA330 (hi7) as the source disk model and Hitachi HDS72303
 | :-------: | :-------: | :------: | :-------: | :-------: | :-------: |
 | 10.487608 | 6.658536  | 0.678112 | 39.982908 | 30.785494 | 57.017281 |
 
+##  Usage of Evaluating on SSD Datasets and Running the MLP
+
+We integrate the MLP into StreamDFP and make StreamDFP to support the evaluation on SSD datasets.
+As MC1 has around 200K SSDs, it needs to run on a server with at least 40GB available memory.
+
+Take *MC1* as an example:
+
+1. open `pyloader/`;
+
+2. run the script `run_mc1_loader.sh` to process 10-day data;
+
+3. go back to `StreamDFP/`;
+
+4. run the script `run_mc1_mlp.sh`
+
+5. parse the results by running `python parse.py mc1_mlp/example.txt`
+
+6. output the following results:
+
+|   days    |    FP     |   FPR    | F1-score  | Precision |  Recall   |
+| :-------: | :-------: | :------: | :-------: | :-------: | :-------: |
+| 15.727778 | 652.400024 | 0.503962 | 50.636388 | 34.165554 | 97.770432 |
+
 ## Contact
 
-Please email to Shujie Han (sjhan@cse.cuhk.edu.hk) if you have any questions.
+Please email to Shujie Han (shujiehan@pku.edu.cn) if you have any questions.
 

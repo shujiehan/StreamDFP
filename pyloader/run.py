@@ -9,14 +9,14 @@ from utils.arff import Arff
 
 
 class Simulate(AbstractPredict):
-    def __init__(self, path, start_date, positive_window_size, #manufacturer, \
+    def __init__(self, path, date_format, start_date, positive_window_size, #manufacturer, \
             disk_model, columns, features, label, forget_type, bl_delay=False, \
             dropna=False, negative_window_size=6, validation_window=6, \
-            bl_regression=False, label_days=None, bl_transfer=False):
+            bl_regression=False, label_days=None, bl_transfer=False, bl_ssd=False):
         super().__init__()
         self.memory = Memory(path, start_date, positive_window_size,  #manufacturer,\
             disk_model, columns, features, label, forget_type, dropna, bl_delay, \
-            negative_window_size, bl_regression, label_days, bl_transfer)
+            negative_window_size, bl_regression, label_days, bl_transfer, date_format, bl_ssd)
         if not bl_transfer:
             self.memory.buffering()
             self.data = self.memory.ret_df.drop(['model', 'date'], axis=1)
@@ -55,7 +55,7 @@ def run_simulating(start_date, path, path_load, path_save, train_path,
                    test_path, file_format, iter_days, model, features, label,
                    columns, forget_type, positive_window_size, bl_delay,
                    bl_load, bl_save, negative_window_size, validation_window,
-                   bl_regression, label_days, bl_transfer):
+                   bl_regression, label_days, bl_transfer, bl_ssd, date_format):
     if file_format == "arff":
         arff = Arff(bl_regression=bl_regression)
     if bl_load:
@@ -66,10 +66,10 @@ def run_simulating(start_date, path, path_load, path_save, train_path,
         #sim.load()
     else:
         print(start_date)
-        sim = Simulate(path, start_date, positive_window_size, model, columns,
+        sim = Simulate(path, date_format, start_date, positive_window_size, model, columns,
                        features, label, forget_type, bl_delay, True,
                        negative_window_size, validation_window, bl_regression,
-                       label_days, bl_transfer)
+                       label_days, bl_transfer, bl_ssd)
         if not bl_transfer:
             fname = (sim.memory.cur_date -
                      datetime.timedelta(days=1)).isoformat()[0:10]
@@ -238,6 +238,7 @@ def usage(arg):
     )
     print("-V <validation_window> [--validation_window <validation_window>]")
     print("-a <label_days> [--label_days <label_days>]")
+    print("-F <date_format> [--date_format <date_format>]")
     print()
     print("Details:")
     print("path_load = load the Simulate class for continuing to process data")
@@ -267,6 +268,7 @@ def usage(arg):
 
 def get_parms():
     str_start_date = "2015-01-01"
+    date_format = "%Y-%m-%d"
     path = "~/trace/smart/all/"
     train_path = "./train/"
     test_path = None
@@ -277,12 +279,14 @@ def get_parms():
     bl_save = False
     bl_regression = False
     bl_transfer = False
+    bl_ssd = False
     option = {
         1: "bl_regression",
         2: "bl_load",
         3: "bl_save",
         4: "bl_delay",
-        5: "bl_transfer"
+        5: "bl_transfer",
+        6: "bl_ssd"
     }
 
     file_format = "arff"
@@ -305,12 +309,12 @@ def get_parms():
 
     try:
         (opt, args) = getopt.getopt(
-            sys.argv[1:], "hs:p:l:v:c:r:e:f:o:i:d:t:w:L:V:a:", [
+            sys.argv[1:], "hs:p:l:v:c:r:e:f:o:i:d:t:w:L:V:a:F:", [
                 "help", "start_date", "path", "path_load", "path_save",
                 "path_features", "train_path", "test_path", "file_format",
                 "option", "iter_days", "disk_model", "forget_type",
                 "positive_window_size", "negative_window_size",
-                "validation_window", "label_days"
+                "validation_window", "label_days", "date_format"
             ])
     except:
         usage(sys.argv[0])
@@ -350,6 +354,8 @@ def get_parms():
                     bl_delay = True
                 elif int(op) == 5:
                     bl_transfer = True
+                elif int(op) == 6:
+                    bl_ssd = True
         elif o in ("-i", "--iter_days"):
             iter_days = int(a)
         elif o in ("-d", "--disk_model"):
@@ -364,8 +370,13 @@ def get_parms():
             validation_window = int(a)
         elif o in ("-a", "--label_days"):
             label_days = int(a)
+        elif o in ("-F", "--date_format"):
+            date_format = a
 
-    start_date = datetime.datetime.strptime(str_start_date, "%Y-%m-%d")
+    if str_start_date.find("-") != -1:
+        start_date = datetime.datetime.strptime(str_start_date, "%Y-%m-%d")
+    else:
+        start_date = datetime.datetime.strptime(str_start_date, "%Y%m%d")
     if path_features is not None:
         features = []
         with open(path_features, "r") as f:
@@ -373,22 +384,25 @@ def get_parms():
                 features.append(line.strip())
         print(features)
 
-    columns = ['date', 'model', 'serial_number'] + label + features
+    if bl_ssd:
+        columns = ['ds', 'model', 'disk_id'] + features
+    else:
+        columns = ['date', 'model', 'serial_number'] + label + features
     return (start_date, path, path_load, path_save, train_path, test_path,
             file_format, bl_delay, bl_load, bl_save, iter_days, model,
             features, label, columns, forget_type, positive_window_size,
             negative_window_size, validation_window, bl_regression, label_days,
-            bl_transfer)
+            bl_transfer, bl_ssd, date_format)
 
 
 if __name__ == "__main__":
     (start_date, path, path_load, path_save, train_path, test_path,
      file_format, bl_delay, bl_load, bl_save, iter_days, disk_model, features,
      label, columns, forget_type, positive_window_size, negative_window_size,
-     validation_window, bl_regression, label_days, bl_transfer) = get_parms()
+     validation_window, bl_regression, label_days, bl_transfer, bl_ssd, date_format) = get_parms()
 
     run_simulating(start_date, path, path_load, path_save, train_path,
                    test_path, file_format, iter_days, disk_model, features,
                    label, columns, forget_type, positive_window_size, bl_delay,
                    bl_load, bl_save, negative_window_size, validation_window,
-                   bl_regression, label_days, bl_transfer)
+                   bl_regression, label_days, bl_transfer, bl_ssd, date_format)

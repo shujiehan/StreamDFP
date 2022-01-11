@@ -1,0 +1,37 @@
+#!bin/bash
+START_DATE="2018-02-01"
+TRAIN_PATH="./pyloader/mc1_train_p30n7v30_fix_20/"
+TEST_PATH="./pyloader/mc1_test_p30n7v30_fix_20/"
+ITER_DAYS=10
+NUM_JOBS=-1
+ENSEMBLE_SIZE=30
+GRACE_PERIOD=50
+SPLIT_CONFIDENCE=1e-7
+VALIDATION_WINDOW=30
+CLASS_INDEX=43
+
+CLF_NAME="meta.MultiLayerPerceptron"
+REPORT_DIR="mc1_mlp/"
+
+if [ ! -d ${REPORT_DIR} ]; then
+mkdir $REPORT_DIR
+fi
+
+LEARNING_RATE=0.5
+DOWN_SAMPLE=2
+NUM_RESET=1000
+THRESHOLD=0.5
+#LAYERS=5
+#UNITS_PER_LAYER=5
+SEED=1
+RES_NAME="example.txt"
+PATH_REPORT="${REPORT_DIR}${RES_NAME}"
+TIME_PATH="${REPORT_DIR}time_${RES_NAME}"
+
+CMD="java -Xmx40g -cp simulate/target/simulate-2019.01.0-SNAPSHOT.jar:moa/target/moa-2019.01.0-SNAPSHOT.jar \
+  simulate.Simulate -s $START_DATE -i $ITER_DAYS -c $CLASS_INDEX -p $TRAIN_PATH -t $TEST_PATH \
+  -a ($CLF_NAME -r $LEARNING_RATE -s $NUM_RESET) -H $THRESHOLD \
+  -D $DOWN_SAMPLE -V $VALIDATION_WINDOW -r $SEED"
+echo "$CMD > $PATH_REPORT"
+time (stdbuf -i0 -o0 -e0 $CMD > $PATH_REPORT) 2>> $TIME_PATH
+

@@ -45,6 +45,8 @@ public class Simulate extends AbstractPredict{
     public int positiveWindowSize;
     public double transferDownSampleRatio;
 
+    public double threshold;
+
     private SimpleDateFormat dateFormat;
 
     public ClassOption abstractClassifierOption = new ClassOption("abstractClassifier", 'a',
@@ -101,6 +103,9 @@ public class Simulate extends AbstractPredict{
     public IntOption positiveWindowSizeOption = new IntOption("positiveWindow", 'P',
             "Window size that buffers the positive samples.", 30);
 
+    public FloatOption thresholdOption = new FloatOption("thresholdForPrediction", 'H',
+            "Threshold for determining positive and negative class", 0.5, 0, 1);
+
 
     public Simulate () {
         super();
@@ -122,6 +127,7 @@ public class Simulate extends AbstractPredict{
         this.fileName = strStartDate + ".arff";
         this.cindex = cindexOption.getValue();
         this.iterations = iterationsOption.getValue();
+        this.threshold = thresholdOption.getValue();
 
         blDelayOption.set();
         this.blDelay = blDelayOption.isSet();
@@ -199,6 +205,7 @@ public class Simulate extends AbstractPredict{
         evaluator.f1PerClassOption.set();
         evaluator.confusionMatrixOption.set();
         evaluator.falseAlarmOption.set();
+        evaluator.setThreshold(threshold);
         return evaluator;
     }
 
