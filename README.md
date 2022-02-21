@@ -10,6 +10,8 @@ In StreamDFP-2.0.0, we incorporate online transfer learning into StreamDFP for t
 
 In StreamDFP-2.1.0, we integrate the Multilayer Perceptron (MLP) with the backpropagation into StreamDFP and make StreamDFP to support the evaluation on public SSD datasets at Alibaba.
 
+In StreamDFP-2.2.0, we integrate the Recurrent Neural Network (RNN) with the backpropagation through time (BPTT) into StreamDFP.
+
 ## Prerequisite
 
 - Python3: Please install [numpy](https://numpy.org/) and [pandas](https://pandas.pydata.org/).
@@ -176,6 +178,26 @@ Take *MC1* as an example:
 |   days    |    FP     |   FPR    | F1-score  | Precision |  Recall   |
 | :-------: | :-------: | :------: | :-------: | :-------: | :-------: |
 | 15.727778 | 652.400024 | 0.503962 | 50.636388 | 34.165554 | 97.770432 |
+
+##  Usage of Running RNN
+
+We integrate RNN with BPTT via the stochastic gradient descent into StreamDFP.
+
+1. open `pyloader/`;
+
+2. run the script `run_hi7_loader.sh` to process 10-day data;
+
+3. go back to `StreamDFP/`;
+
+4. run the script `run_hi7_rnn.sh` to training prediction model of RNN and predict disk failures;
+
+5. parse the results by running `python parse.py hi7_rnn/example.txt`
+
+6. output the following results:
+
+|   days    |    FP     |   FPR    | F1-score  | Precision |  Recall   |
+| :-------: | :-------: | :------: | :-------: | :-------: | :-------: |
+| 17.900002 | 0.000000  | 0.000000 | 98.550730 | 100.000000 | 97.142860 |
 
 ## Contact
 

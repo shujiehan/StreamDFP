@@ -163,7 +163,6 @@ public class MultiLayerPerceptron extends AbstractClassifier implements MultiCla
         }
 
         public double[] computeErrorInOutputLayer(Instance inst) {
-            assert(layerType == HIDDEN);
             double[] errors = new double[numUnits];
             for (int i = 0; i < numUnits; i++) {
                 errors[i] = units.get(i).computeError(inst);
@@ -245,7 +244,6 @@ public class MultiLayerPerceptron extends AbstractClassifier implements MultiCla
         // compute the output of forward propagation for the first hidden layer
         public double computeOutput(Instance inst) {
             output = 0;
-            assert(inst.numAttributes() - 1 == inWeights.numValues());
             for (int i = 0; i < inst.numAttributes() - 1; i++) {
                 int idxAtt = modelAttIndexToInstanceAttIndex(i, inst);
                 output += inst.value(idxAtt) * inWeights.getValue(i);
@@ -258,7 +256,6 @@ public class MultiLayerPerceptron extends AbstractClassifier implements MultiCla
         // compute the output of forward propagation for the remaining hidden layers
         public double computeOutput(double[] input) {
             output = 0;
-            assert(input.length == inWeights.numValues());
             for (int i = 0; i < input.length; i++) {
                 output += input[i] * inWeights.getValue(i);
             }
@@ -274,7 +271,6 @@ public class MultiLayerPerceptron extends AbstractClassifier implements MultiCla
         }
 
         public double computeError(double[] errorsInNextLayer, double[] inWeightsFromThisUnit) {
-            assert(errorsInNextLayer.length == inWeightsFromThisUnit.length);
             double errorSum = 0;
             for (int i = 0; i < errorsInNextLayer.length; i++) {
                errorSum += errorsInNextLayer[i] * inWeightsFromThisUnit[i];
@@ -330,7 +326,6 @@ public class MultiLayerPerceptron extends AbstractClassifier implements MultiCla
                 forwardInput = layers.get(i).forwardPropagate(forwardInput);
             }
         }
-        assert(forwardInput.length == inst.numClasses());
         return forwardInput;
     }
 
